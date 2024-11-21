@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scorecardpy as sc
-from analysis_script import load_data
+
 
 def rfms_score(df):
     """

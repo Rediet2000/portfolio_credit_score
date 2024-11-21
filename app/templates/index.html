@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model API Interface</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Model API</h1>
+        <p>Interact with the AI Model: Train, Predict, and Analyze RFMS metrics.</p>
+
+        <div class="section">
+            <h2>Train the Model</h2>
+            <form id="trainForm">
+                <button type="submit">Train Model</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Make Predictions</h2>
+            <form id="predictForm">
+                <textarea id="inputData" placeholder='[{"CustomerId": 1, "Amount": 200, "TransactionStartTime": "2023-01-01"}]' required></textarea>
+                <button type="submit">Predict</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Calculate RFMS</h2>
+            <form id="rfmsForm">
+                <input type="file" id="rfmsFile" name="file" required>
+                <button type="submit">Calculate RFMS</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Classify Customers</h2>
+            <form id="goodBadForm">
+                <input type="file" id="goodBadFile" name="file" required>
+                <button type="submit">Classify Customers</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Calculate WoE</h2>
+            <form id="woeForm">
+                <input type="file" id="woeFile" name="file" required>
+                <input type="text" id="targetColumn" placeholder="Target Column" required>
+                <input type="text" id="featureColumns" placeholder="Feature Columns (comma-separated)" required>
+                <button type="submit">Calculate WoE</button>
+            </form>
+        </div>
+
+        <div id="output" class="output"></div>
+    </div>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

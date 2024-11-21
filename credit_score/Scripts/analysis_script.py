@@ -30,15 +30,10 @@ def overview_dataset(df):
     df : pandas DataFrame
         The dataframe to be analyzed
     """
-    print("Overview of the dataset:")
     print(df.info())
-    print("Summary statistics:")
     print(df.describe())
-    print("Column names and data types:")
     print(df.columns)
-    print("Data types:")
     print(df.dtypes)
-    print("Missing values:")
     print(df.isnull().sum())
     print(df.isna().sum())
 
@@ -106,18 +101,8 @@ def corelation_analysis(df):
     sns.heatmap(df.corr(), annot=True, cmap='coolwarm', linewidths=0.5)
     plt.title('Correlation Matrix')
     plt.show()
-# Indetify missing values
-def missing_values(df):
-    """
-    Identify missing values in a dataframe
-    
-    Parameters
-    ----------
-    df : pandas DataFrame
-        The dataframe to be analyzed
-    """
-    print(df.isnull().sum())
-    print(df.isna().sum())
+
+# Outlier detection
 def outlierDetection(df):
     """
     Perform outlier detection on a dataframe

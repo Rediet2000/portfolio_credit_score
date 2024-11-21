@@ -2,37 +2,66 @@ from tkinter import _test
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, accuracy_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 from analysis_script import *
 from sklearn.model_selection import GridSearchCV, train_test_split
 
 # split data into train and test sets
 def split_data(df):
     """
-    Split the given dataframe into training and test sets.
-
+    Split the data into training and test sets, apply preprocessing to both and return.
+    
     Parameters
     ----------
-    df : pandas DataFrame
-        The dataframe to be split.
-
+    df : DataFrame
+        The data to be split into training and test sets.
+    
     Returns
     -------
-    X_train : pandas DataFrame
-        The feature variables for the training set.
-    X_test : pandas DataFrame
-        The feature variables for the test set.
-    y_train : pandas Series
-        The target variable for the training set.
-    y_test : pandas Series
-        The target variable for the test set.
+    X_train, X_test, y_train, y_test : tuple of numpy arrays
+        The preprocessed training and test sets.
+    
     """
+    
     X = df.drop('FraudResult', axis=1)
     y = df['FraudResult']
+
+    # Identify categorical columns (you might need to adjust this based on your dataset)
+    categorical_columns = X.select_dtypes(include=['object']).columns.tolist()
+
+    # Preprocessing for numerical columns: Impute missing values and scale
+    numeric_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='mean')), 
+    ])
+
+    # Preprocessing for categorical columns: Encode categorical variables
+    categorical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='constant', fill_value='missing')), 
+        ('encoder', OneHotEncoder(handle_unknown='ignore')) 
+    ])
+
+    # Combine both transformers into a single column transformer
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numeric_transformer, X.select_dtypes(include=['float64', 'int64']).columns),
+            ('cat', categorical_transformer, categorical_columns)
+        ]
+    )
+
+    # Split the data into training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Apply preprocessing to both train and test sets
+    X_train = preprocessor.fit_transform(X_train)
+    X_test = preprocessor.transform(X_test)
+
     return X_train, X_test, y_train, y_test
 
-# train model using logistic regression
+    # train model using logistic regression
 def train_model(X_train, y_train):
     """
     Train a logistic regression model using the given training data.
@@ -53,7 +82,6 @@ def train_model(X_train, y_train):
     model = LogisticRegression()
     model.fit(X_train, y_train)
     return model
-
 # Hyperparameter tuning
 def hyperparameter_tuning(model, X_train, y_train):
     """
