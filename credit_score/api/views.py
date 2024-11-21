@@ -1,104 +1,74 @@
-import sys
-from django.http import JsonResponse
-from django.shortcuts import render
+from h11 import Response
+import joblib
+import numpy as np
+import os
 import pandas as pd
+from django.shortcuts import render
+
+from credit_score.api.utils import encode_categorical_features, handle_missing_values, normalize_features
+from .form import PredictionForm
 import os, sys
-
-from Scripts.analysis_script import load_data
-from Scripts.future_engineering import aggregate_features, encode_categorical_data, extract_features
-from Scripts.model_script import evaluate_model, predict_new_data, split_data, train_model
-from Scripts.WoE import divide_good_bad, rfms_score, woe_binning
 sys.path.append(os.path.abspath(os.path.join('..')))
+# Load the saved model
 
-# from credit_score.api.WoE import divide_good_bad, rfms_score, woe_binning
-# from credit_score.api.future_engineering import aggregate_features, encode_categorical_data, extract_features
-# from credit_score.api.model_script import evaluate_model, predict_new_data, split_data, train_model
+model_path = os.path.join(os.path.dirname(__file__), './model/best_credit_scoring_model.pkl')
+model = joblib.load(model_path)
+#credit_api\scoring\model\best_credit_scoring_model.pkl
+
+# Define an API to serve predictions
+@api_view(['POST']) # type: ignore
+def predict_credit_risk(request):
+    """
+    API endpoint to make a prediction given a set of input features.
+
+    Parameters:
+        request (Request): A POST request containing the input features as a dictionary of lists
+
+    Returns:
+        Response: A JSON response containing the prediction as a list
+
+    Raises:
+        Response: A 400 error response if no data is provided
+    """
+
+    data = request.data.get('features', None)
+    
+    if data:
+        # Create DataFrame from the input features (Assuming input as a dictionary of lists)
+        df = pd.DataFrame([data])
+        
+        # Apply the preprocessing steps
+        df = handle_missing_values(df)
+        categorical_columns = ['ProductCategory', 'ChannelId', 'PricingStrategy', 'FraudResult']
+        df = encode_categorical_features(df, categorical_columns)
+        df = normalize_features(df)
+        
+        # Make prediction
+        features = df.to_numpy()  # Convert preprocessed DataFrame to numpy array
+        prediction = model.predict(features)
+        return Response({'prediction': prediction.tolist()})
+    else:
+        return Response({'error': 'No data provided'}, status=400)
+
+# UI for submitting data
 def home(request):
-    """
-    Home view. Returns the rendered index.html page.
-
-    :param request: WSGIRequest
-    :return: HttpResponse
-    """
-    return render(request, 'index.html')
-
-# Train model
-def train_model_api(request):
     if request.method == 'POST':
-        try:
-            df = load_data('../Datas/data.csv')
-            df = aggregate_features(df)
-            df = extract_features(df)
-            df = encode_categorical_data(df)
-
-            X_train, X_test, y_train, y_test = split_data(df)
-            model = train_model(X_train, y_train)
-            accuracy = evaluate_model(model, X_test, y_test)
-
-            # Save model
-            import pickle
-            with open('model.pkl', 'wb') as f:
-                pickle.dump(model, f)
-
-            return JsonResponse({"message": "Model trained successfully", "accuracy": accuracy})
-        except Exception as e:
-            return JsonResponse({"error": str(e)})
-    return JsonResponse({"error": "Invalid request method"})
-
-# Predict
-def predict_api(request):
-    if request.method == 'POST':
-        try:
-            import pickle
-            with open('model.pkl', 'rb') as f:
-                model = pickle.load(f)
-
-            data = pd.DataFrame(request.POST.dict())
-            data = aggregate_features(data)
-            data = extract_features(data)
-            data = encode_categorical_data(data)
-
-            predictions = predict_new_data(model, data)
-            return JsonResponse({"predictions": predictions.tolist()})
-        except Exception as e:
-            return JsonResponse({"error": str(e)})
-    return JsonResponse({"error": "Invalid request method"})
-
-# RFMS Scoring
-def calculate_rfms_api(request):
-    if request.method == 'POST':
-        try:
-            file = request.FILES['file']
-            df = pd.read_csv(file)
-            customer_metrics = rfms_score(df)
-            return JsonResponse({"RFMS_Sample": customer_metrics.head(5).to_dict()})
-        except Exception as e:
-            return JsonResponse({"error": str(e)})
-    return JsonResponse({"error": "Invalid request method"})
-
-# Categorize customers
-def categorize_customers_api(request):
-    if request.method == 'POST':
-        try:
-            file = request.FILES['file']
-            df = pd.read_csv(file)
-            customer_metrics = rfms_score(df)
-            categorized_df = divide_good_bad(df, customer_metrics)
-            return JsonResponse({"Sample": categorized_df.head(5).to_dict()})
-        except Exception as e:
-            return JsonResponse({"error": str(e)})
-    return JsonResponse({"error": "Invalid request method"})
-
-# WoE Binning
-def calculate_woe_api(request):
-    if request.method == 'POST':
-        try:
-            file = request.FILES['file']
-            df = pd.read_csv(file)
-            target = request.POST['target']
-            features = request.POST.getlist('features')
-            bins, iv_values = woe_binning(df, target, features)
-            return JsonResponse({"IV_Values": iv_values})
-        except Exception as e:
-            return JsonResponse({"error": str(e)})
-    return JsonResponse({"error": "Invalid request method"})
+        form = PredictionForm(request.POST)
+        if form.is_valid():
+            # Extract form values into a DataFrame
+            data = {field: form.cleaned_data[field] for field in form.fields}
+            df = pd.DataFrame([data])
+            
+            # Apply preprocessing
+            df = handle_missing_values(df)
+            categorical_columns = ['ProductCategory', 'ChannelId', 'PricingStrategy', 'FraudResult']
+            df = encode_categorical_features(df, categorical_columns)
+            #df = normalize_features(df)
+            
+            # Make prediction
+            features = df.to_numpy()
+            prediction = model.predict(features)
+            return render(request, 'home.html', {'form': form, 'prediction': prediction[0]})
+    else:
+        form = PredictionForm()
+        return render(request, 'home.html', {'form': form})
