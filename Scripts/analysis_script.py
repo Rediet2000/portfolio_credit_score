@@ -30,11 +30,15 @@ def overview_dataset(df):
     df : pandas DataFrame
         The dataframe to be analyzed
     """
-    
+    print("Overview of the dataset:")
     print(df.info())
+    print("Summary statistics:")
     print(df.describe())
+    print("Column names and data types:")
     print(df.columns)
+    print("Data types:")
     print(df.dtypes)
+    print("Missing values:")
     print(df.isnull().sum())
     print(df.isna().sum())
 
@@ -62,7 +66,14 @@ def plot_numerical_distributions(df):
 
 # Distribution of categorical variables
 def plot_categorical_distributions(df):
-    """Plot distributions of categorical features."""
+    """
+    Plot distributions of categorical features.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe containing the categorical features to be plotted.
+    """
     categorical_cols = df.select_dtypes(include=['object']).columns
     n_cols = 2
     n_rows = (len(categorical_cols) + 1) // 2
@@ -107,8 +118,6 @@ def missing_values(df):
     """
     print(df.isnull().sum())
     print(df.isna().sum())
-print(missing_values(load_data('data.csv')))
-
 def outlierDetection(df):
     """
     Perform outlier detection on a dataframe

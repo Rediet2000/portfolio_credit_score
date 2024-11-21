@@ -1,10 +1,24 @@
 import numpy as np
 import pandas as pd
 from sklearn.calibration import LabelEncoder
-from analysis_script import load_data
 
 # create aggregate features
 def aggregate_features(df):
+    """
+    Aggregate features by customer.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe to be aggregated.
+
+    Returns
+    -------
+    df : pandas DataFrame
+        The dataframe with the aggregate features added.
+
+    """
+
     Group_all = df.groupby(['CustomerId'])
     df['TotalTransactionAmount'] = Group_all['Amount'].transform('sum')
     df['AverageTransactionCount'] = Group_all['Amount'].transform('count')
@@ -13,10 +27,24 @@ def aggregate_features(df):
     df['MinTransactionAmount'] = Group_all['Amount'].transform('min')
     df['MaxTransactionAmount'] = Group_all['Amount'].transform('max')
     return df
-aggr = aggregate_features(load_data('data.csv'))
 
 def extract_features(df):
     # Ensure the 'TransactionStartTime' column is converted to datetime
+    """
+    Extracts date and time features from the 'TransactionStartTime' column in the dataframe.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe containing the 'TransactionStartTime' column.
+
+    Returns
+    -------
+    df : pandas DataFrame
+        The dataframe with added columns for 'TransactionHour', 'TransactionDay',
+        'TransactionMonth', and 'TransactionYear', indicating the respective time features.
+        Also prints a warning if any 'TransactionStartTime' entries couldn't be converted.
+    """
     df['TransactionStartTime'] = pd.to_datetime(df['TransactionStartTime'], errors='coerce')
     
     # Check if any rows failed to convert
@@ -30,7 +58,6 @@ def extract_features(df):
     df['TransactionYear'] = df['TransactionStartTime'].dt.year
 
     return df
-extracted = extract_features(load_data('data.csv'))
 
 # Encode categorical features using one-hot encoding
 def encode_categorical_features(df, categorical_cols):
@@ -51,43 +78,63 @@ def encode_categorical_features(df, categorical_cols):
     """
   # Encoding categorical data
 def encode_categorical_data(df):
+    """
+    Encode categorical features in a given dataframe using a LabelEncoder.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe containing the categorical features to be encoded.
+
+    Returns
+    -------
+    df_encoded : pandas DataFrame
+        The dataframe with the encoded categorical features.
+    """
+    
     categorical_cols = df.select_dtypes(include=['object']).columns
     encoder = LabelEncoder()
     for col in categorical_cols:
         df[col] = encoder.fit_transform(df[col])
     return df
-encoded = encode_categorical_data(load_data('data.csv'))
-
-# Print the first few rows of the encoded DataFrame
-print(encoded.head())
 
 # handle missing values using imputation
-# def handle_missing_values(df):
-#     """
-#     Handle missing values in a given dataframe by imputing the mean of
-#     corresponding columns.
+def handle_missing_values(df):
+    """
+    Handle missing values in a given dataframe by imputing the mean of
+    corresponding columns.
 
-#     Parameters
-#     ----------
-#     df : pandas DataFrame
-#         The dataframe containing the missing values to be imputed.
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe containing the missing values to be imputed.
 
-#     Returns
-#     -------
-#     df_imputed : pandas DataFrame
-#         The dataframe with the imputed missing values.
+    Returns
+    -------
+    df_imputed : pandas DataFrame
+        The dataframe with the imputed missing values.
 
-#     """
-#     df.fillna(df.mean(), inplace=True)
-#     return df
-
-# imputed = handle_missing_values(load_data('data.csv'))
+    """
+    df.fillna(df.mean(), inplace=True)
+    return df
 
 # normalize numerical features
 def normalize_numerical_features(df):
+    """
+    Normalize numerical features in a dataframe to have a mean of 0 and standard deviation of 1.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe containing numerical features to be normalized.
+
+    Returns
+    -------
+    df : pandas DataFrame
+        The dataframe with normalized numerical features.
+    """
+    
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     for col in numerical_cols:
         df[col] = (df[col] - df[col].mean()) / df[col].std()
     return df
-normalized = normalize_numerical_features(load_data('data.csv'))
-print(normalized.head())

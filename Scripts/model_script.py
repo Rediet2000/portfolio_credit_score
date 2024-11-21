@@ -1,22 +1,36 @@
 from tkinter import _test
-import numpy
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, accuracy_score
 from analysis_script import *
 from sklearn.model_selection import GridSearchCV, train_test_split
 
 # split data into train and test sets
 def split_data(df):
+    """
+    Split the given dataframe into training and test sets.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe to be split.
+
+    Returns
+    -------
+    X_train : pandas DataFrame
+        The feature variables for the training set.
+    X_test : pandas DataFrame
+        The feature variables for the test set.
+    y_train : pandas Series
+        The target variable for the training set.
+    y_test : pandas Series
+        The target variable for the test set.
+    """
     X = df.drop('FraudResult', axis=1)
     y = df['FraudResult']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    print("X_train head:")
-    print(X_train.head())
     return X_train, X_test, y_train, y_test
-split_data(load_data('data.csv'))
 
 # train model using logistic regression
 def train_model(X_train, y_train):

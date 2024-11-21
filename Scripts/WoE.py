@@ -7,10 +7,19 @@ from analysis_script import load_data
 
 def rfms_score(df):
     """
-    Calculate RFMS score for each customer.
-    RFMS: Recency, Frequency, Monetary, Size
+    Calculate RFMS (Recency, Frequency, Monetary, and Size) scores for customers.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        The dataframe containing customer transaction data.
+
+    Returns
+    -------
+    customer_metrics : pandas DataFrame
+        The dataframe with aggregated customer metrics (Recency, Frequency, MonetaryTotal, MonetaryAvg) and the RFMS score.
     """
-    # Ensure 'TransactionStartTime' is in datetime format
+
     df['TransactionStartTime'] = pd.to_datetime(df['TransactionStartTime'], errors='coerce')
     current_date = df['TransactionStartTime'].max()
 
@@ -36,11 +45,21 @@ def rfms_score(df):
     )
 
     return customer_metrics
-
 # Plot histogram of RFMS metrics
 def plot_histogram(customer_metrics):
+   
     """
-    Plot histograms of the RFMS metrics and RFMS score.
+    Plot histograms for RFMS metrics.
+
+    Parameters
+    ----------
+    customer_metrics : pandas DataFrame
+        The dataframe containing RFMS metrics for each customer, including
+        'Recency', 'Frequency', 'MonetaryTotal', 'MonetaryAvg', and 'RFMS_Score'.
+    
+    Returns
+    -------
+    None
     """
     plt.figure(figsize=(15, 12))
 
