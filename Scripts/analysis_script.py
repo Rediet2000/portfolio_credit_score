@@ -125,7 +125,7 @@ def outlierDetection(df):
         sns.boxplot(df[col])
         plt.title(f'Box Plot for {col}')
         plt.show()
-outlierDetection(load_data('data.csv'))
+
 
 
  
